@@ -23,7 +23,7 @@ public class MBP_Manager : MonoBehaviour {
 	void Update() {
 		string s = string.Empty;
 		for (int i = 0; i < instances.Length;i++) {
-			s += ("Instance : " + this.GetInstanceID() + " PI: " + instances[i].pi + "\n");
+			s += ("Instance : " + instances[i].GetInstanceID() + " PI: " + instances[i].pi + "\n");
 		}
 		Debug.Log(s);
 	}
