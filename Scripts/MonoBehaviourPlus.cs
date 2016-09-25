@@ -1,8 +1,5 @@
 ﻿/// <summary>
-/// Mono behaviour plus is a multi-threaded monobehaviour wrapper,
-/// Using Curiously Recurring Template Pattern
-/// http://stackoverflow.com/questions/1327568/curiously-recurring-template-pattern-and-generics-constraints-c
-/// http://stackoverflow.com/questions/10939907/how-to-write-a-good-curiously-recurring-template-pattern-crtp-in-c-sharp
+/// Mono behaviour plus is a multi-threaded monobehaviour wrapper
 /// </summary>
 
 using UnityEngine;
@@ -26,89 +23,113 @@ public abstract class MonoBehaviourPlus<T> : MonoBehaviour where T : MonoBehavio
 		}
 	}
 	#endregion
+
+	const bool IS_DEBUG_ON = false;
 	
 	static List<T> instances = new List<T> ();
-	//ManualResetEvent _event = new ManualResetEvent (false);
+	AutoResetEvent _event = new AutoResetEvent (true);
+	AutoResetEvent controllerEvent = new AutoResetEvent (false);
+	static WaitHandle[] _events;
+	static AutoResetEvent[] controllerEvents;
 	WaitCallback updateDelegate;
-	bool isDone = true;
-	static Stopwatch sw = new Stopwatch ();
+	bool isInited = false;
+	public bool isPrallelUpdateEnabled = true;
 
-	protected virtual void Awake () {
+
+	void Begin () {
 		if (Application.isPlaying) {
 			instances.Add(Instance);
-			updateDelegate = (object obj) => {
-				ParallelUpdate();
-				//_event.Set();
-				isDone = true;
-			};
+			updateDelegate = WaitCallback;
+			isInited = true;
+			bool s = ThreadPool.QueueUserWorkItem(updateDelegate);
+			if (!s) {
+				Debug.LogError("Cannot queue " 
+					+ Instance.GetType().ToString() 
+					+ " : " + Instance.GetInstanceID() 
+					+ " to update list, parallel updating for " 
+					+ Instance.GetType().ToString()
+					+ " is disbaled!"
+				);
+				isPrallelUpdateEnabled = false;
+			} else {
+				isPrallelUpdateEnabled = true;
+			}
 		}
+	}
+
+	void End () {
+		if (Application.isPlaying) {
+			instances.Remove(Instance);
+			_event.Close();
+			isInited = false;
+		}
+	}
+
+	protected virtual void Awake () {
+		if (isInited==false) Begin();
+	}
+
+	protected virtual void OnEnable () {
+		if (isInited==false) Begin();
+	}
+
+	protected virtual void OnDisable () {
+		if (isInited==true) End();
 	}
 
 	protected virtual void OnDestroy () {
-		if (Application.isPlaying) instances.Remove(Instance);
+		if (isInited==true) End();
 	}
 
 	protected abstract void ParallelUpdate();
+	protected virtual void OnParallelUpdateDone(){}
+
+
+	void WaitCallback(object o) {
+		while (true) {
+			controllerEvent.WaitOne();
+			ParallelUpdate ();
+			_event.Set();
+			OnParallelUpdateDone();
+		}
+	}
+
+
 
 	static void PurgeNullInstances() {
+		bool token = false;
 		for (int i = instances.Count - 1;i>=0;i--) {
-			if (instances[i] == null) instances.RemoveAt(i);
+			if (instances[i] == null) {
+				instances.RemoveAt(i);
+				token = true;
+			}
+		}
+		if (token || _events == null || controllerEvents == null) {
+			_events = new WaitHandle[instances.Count];
+			controllerEvents = new AutoResetEvent[instances.Count];
+			for (int i = 0;i<instances.Count;i++) {
+				_events[i] = instances[i]._event;
+				controllerEvents[i] = instances[i].controllerEvent;
+			}
 		}
 	}
 
-	/// <summary>
-	/// Wait for the update deployed in the previous frame, and then deploy update for the current frame
-	/// </summary>
-	/// <param name="timeOutInMS">Time out in MillieSeconds</param>
-	/// <param name="isUpdate">If set to <c>true</c> Update will be queued after wait.</param>
-	public static void WaitAndUpdate(int timeOutInMS = 1000,bool isUpdate = true) {
-		PurgeNullInstances();
-		int instancesCount = instances.Count;
-		int count = 0;
-		sw.Reset();
-		sw.Start();
-		do {
-			for (int i = 0;i < instances.Count;i++) {
-				if (instances[i].isDone) {
-					if (isUpdate) {
-						instances[i].isDone = false;
-						ThreadPool.QueueUserWorkItem(instances[i].updateDelegate);
-					}
-					count++;
-				}
-			}
-			if (count == instancesCount) return;
-			else {
-				sw.Stop();
-				if (sw.Elapsed.Milliseconds > timeOutInMS ) {
-					for (int i = 0;i<instances.Count;i++) instances[i].isDone = true;
-					Debug.LogError("Time out!");
-					return;
-				}
-				sw.Start();
-			}
-		} while (count < instancesCount );
-	}
-
-	/// <summary>
-	/// Wait the Update
-	/// </summary>
-	/// <param name="timeOutInMS">Time out in M.</param>
 	public static void Wait(int timeOutInMS = 1000) {
-		WaitAndUpdate(timeOutInMS,false);
+		PurgeNullInstances();
+//		WaitHandle[] events = new WaitHandle[instances.Count];
+//		for (int i = 0;i<instances.Count;i++) {
+//			events[i] = instances[i]._event;
+//		}
+		if (IS_DEBUG_ON) Debug.LogWarning("About to wait!");
+		WaitHandle.WaitAll(_events,timeOutInMS);
+		if (IS_DEBUG_ON) Debug.LogWarning("Waiting finished for frame:" + MBP_Manager.frame);
 	}
 
-	/// <summary>
-	/// Updates all instances.
-	/// </summary>
 	public static void UpdateAll() {
-		PurgeNullInstances();
-		for (int i = 0;i < instances.Count;i++) {
-			if (instances[i].isDone) {
-				instances[i].isDone = false;
-				ThreadPool.QueueUserWorkItem(instances[i].updateDelegate);
-			}
-		}
+		if (IS_DEBUG_ON) Debug.LogWarning("About to signal work thread to perform task!");
+		for (int i = 0;i<controllerEvents.Length;i++) controllerEvents[i].Set();
+		if (IS_DEBUG_ON) Debug.LogWarning("set to non-signal so work thread only perform once!");
 	}
+
 
 }

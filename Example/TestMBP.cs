@@ -1,28 +1,27 @@
 ﻿using UnityEngine;
 using System.Collections;
+using System.Threading;
 
 public class TestMBP : MonoBehaviourPlus<TestMBP> {
 
-	public double pi;
-	public int maxIteration = 100;
+	public int ID;
+
+	public int sleep = 100;
+	public int result = 0;
 
 	protected override void ParallelUpdate () {
-		pi = 2 * F(1);
+		Thread.Sleep(sleep);
 	}
+
+	protected override void OnParallelUpdateDone () {
+		if (MBP_Manager.isDebugOn)
+			Debug.Log("ID:"+ID + " finished parallel update for frame:" + MBP_Manager.frame);
+	}
+
+
 
 	public void NotMultithread() {
 		ParallelUpdate();
-	}
-
-	double F (int i) {
-		//some heavy delay
-		for (int p = 0;p<maxIteration * 10;p++) {
-			float o = Mathf.Sqrt(p);
-		}
-		//some heavy delay
-		if ( i <= maxIteration)
-			return 1 + i / (2.0 * i + 1) * F(i + 1);
-		else return 0;
 	}
 
 }
