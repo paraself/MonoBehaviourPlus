@@ -82,15 +82,17 @@ public abstract class MonoBehaviourPlus<T> : MonoBehaviour where T : MonoBehavio
 	}
 
 	protected abstract void ParallelUpdate();
-	protected virtual void OnParallelUpdateDone(){}
+	protected virtual void BeforeParallelUpdate(){}
+	protected virtual void AfterParallelUpdate(){}
 
 
 	void WaitCallback(object o) {
 		while (true) {
 			controllerEvent.WaitOne();
+			BeforeParallelUpdate();
 			ParallelUpdate ();
 			_event.Set();
-			OnParallelUpdateDone();
+			AfterParallelUpdate();
 		}
 	}
 
@@ -116,10 +118,6 @@ public abstract class MonoBehaviourPlus<T> : MonoBehaviour where T : MonoBehavio
 
 	public static void Wait(int timeOutInMS = 1000) {
 		PurgeNullInstances();
-//		WaitHandle[] events = new WaitHandle[instances.Count];
-//		for (int i = 0;i<instances.Count;i++) {
-//			events[i] = instances[i]._event;
-//		}
 		if (IS_DEBUG_ON) Debug.LogWarning("About to wait!");
 		WaitHandle.WaitAll(_events,timeOutInMS);
 		if (IS_DEBUG_ON) Debug.LogWarning("Waiting finished for frame:" + MBP_Manager.frame);

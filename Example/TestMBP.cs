@@ -13,7 +13,7 @@ public class TestMBP : MonoBehaviourPlus<TestMBP> {
 		Thread.Sleep(sleep);
 	}
 
-	protected override void OnParallelUpdateDone () {
+	protected override void AfterParallelUpdate () {
 		if (MBP_Manager.isDebugOn)
 			Debug.Log("ID:"+ID + " finished parallel update for frame:" + MBP_Manager.frame);
 	}

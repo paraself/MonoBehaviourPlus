@@ -7,7 +7,7 @@ using Debug = UnityEngine.Debug;
 public class MBP_Manager : MonoBehaviour {
 
 	public bool isMultithreading;
-	public static bool isDebugOn = false;
+	public static bool isDebugOn = true;
 	public int calculationLoad = 200;
 	TestMBP[] instances;
 	Stopwatch sw = new Stopwatch ();
@@ -23,14 +23,6 @@ public class MBP_Manager : MonoBehaviour {
 		}
 		sw.Start();
 	}
-
-//	void Update() {
-//		string s = string.Empty;
-//		for (int i = 0; i < instances.Length;i++) {
-//			s += ("Instance : " + instances[i].GetInstanceID() + " PI: " + instances[i].pi + "\n");
-//		}
-//		Debug.Log(s);
-//	}
 
 	void LateUpdate() {
 		if (isMultithreading) {
