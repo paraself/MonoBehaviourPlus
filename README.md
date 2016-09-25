@@ -10,24 +10,22 @@ public class TestMBP : MonoBehaviourPlus<TestMBP> {
 
 	public double pi;
 	public int maxIteration = 100;
-
+	
+	//abstract method that you must implement
 	protected override void ParallelUpdate () {
-		pi = 2 * F(1);
+		//do your threaded work here, cannot use any unity api inside this
+		//...
+		
 	}
-
-	public void NotMultithread() {
-		ParallelUpdate();
+	
+	//virtual method that you can override
+	protected override void BeforeParallelUpdate () {
+	
 	}
-
-	double F (int i) {
-		//some heavy delay
-		for (int p = 0;p<maxIteration * 10;p++) {
-			float o = Mathf.Sqrt(p);
-		}
-		//some heavy delay
-		if ( i <= maxIteration)
-			return 1 + i / (2.0 * i + 1) * F(i + 1);
-		else return 0;
+	
+	//virtual method that you can override
+	protected override void AfterParallelUpdate () {
+	
 	}
 
 }
@@ -38,12 +36,6 @@ Derived a class from ``MonoBehaviourPlus<T>``, and implement an abstract method 
 Then in a manager script, call:
 
 ```c#
-TestMBP.WaitAndUpdate();
-```
-to wait for the previous frame's parallel updates, and then perform the parallel updates for the current frame. This makes the parallel update run across entire game update loop.  
-Alternatively, you can:
-
-```c#
 TestMBP.Wait();
 ```
 This will make the manager script which is running on the Unity main thread to wait for all the TestMBP's instances' parallel update. And then you can call:
@@ -51,5 +43,4 @@ This will make the manager script which is running on the Unity main thread to w
 ```c#
 TestMBP.UpdateAll();
 ```
-to run all the instances' parallel update metho multi-threadedly.  
-Usually ``WaitAndUpdate()`` have better performace and is recommended to use.
+to run all the instances' parallel update metho multi-threadedly.
