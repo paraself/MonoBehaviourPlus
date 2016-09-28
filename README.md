@@ -17,17 +17,6 @@ public class TestMBP : MonoBehaviourPlus<TestMBP> {
 		//...
 		
 	}
-	
-	//virtual method that you can override
-	protected override void BeforeParallelUpdate () {
-	
-	}
-	
-	//virtual method that you can override
-	protected override void AfterParallelUpdate () {
-	
-	}
-
 }
 
 ```
