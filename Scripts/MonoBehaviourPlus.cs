@@ -36,7 +36,7 @@ public abstract class MonoBehaviourPlus<T> : MonoBehaviour where T : MonoBehavio
 	WaitCallback updateDelegate;
 	bool isInited = false;
 	public bool isPrallelUpdateEnabled = true;
-	enum WaitType {Current,Previous};
+	public enum WaitType {Current,Previous};
 
 	void Begin () {
 		if (Application.isPlaying) {
@@ -121,7 +121,7 @@ public abstract class MonoBehaviourPlus<T> : MonoBehaviour where T : MonoBehavio
 		}
 	}
 
-	public static void WaitPrevious(int timeOutInMS = 1000,WaitType waitType = WaitType.Previous) {
+	public static void Wait(int timeOutInMS = 1000,WaitType waitType = WaitType.Previous) {
 		PurgeNullInstances();
 		if (IS_DEBUG_ON) Debug.LogWarning("About to wait!");
 		int i = (waitType == WaitType.Previous ) ? prevEventIndex : eventIndex;
