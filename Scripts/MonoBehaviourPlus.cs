@@ -27,9 +27,11 @@ public abstract class MonoBehaviourPlus<T> : MonoBehaviour where T : MonoBehavio
 	const bool IS_DEBUG_ON = false;
 	
 	static List<T> instances = new List<T> ();
-	AutoResetEvent _event = new AutoResetEvent (true);
+	AutoResetEvent[] _event = new AutoResetEvent[2] {new AutoResetEvent (true),new AutoResetEvent (false)}; 
+	static int eventIndex = 0;
+	static int prevEventIndex = 0;
 	AutoResetEvent controllerEvent = new AutoResetEvent (false);
-	static WaitHandle[] _events;
+	static WaitHandle[][] _events = new WaitHandle[2][] ;
 	static AutoResetEvent[] controllerEvents;
 	WaitCallback updateDelegate;
 	bool isInited = false;
@@ -60,8 +62,10 @@ public abstract class MonoBehaviourPlus<T> : MonoBehaviour where T : MonoBehavio
 
 	void End () {
 		if (Application.isPlaying) {
+			isPrallelUpdateEnabled = false;
 			instances.Remove(Instance);
-			_event.Close();
+			_event[0].Close();
+			_event[1].Close();
 			isInited = false;
 		}
 	}
@@ -89,7 +93,9 @@ public abstract class MonoBehaviourPlus<T> : MonoBehaviour where T : MonoBehavio
 		while (isPrallelUpdateEnabled) {
 			controllerEvent.WaitOne();
 			ParallelUpdate ();
-			_event.Set();
+			prevEventIndex = eventIndex;
+			eventIndex = (eventIndex + 1) % 2;
+			_event[eventIndex].Set();
 		}
 	}
 
@@ -104,10 +110,12 @@ public abstract class MonoBehaviourPlus<T> : MonoBehaviour where T : MonoBehavio
 			}
 		}
 		if (token || isForceUpdate || _events == null || controllerEvents == null) {
-			_events = new WaitHandle[instances.Count];
+			_events[0] = new WaitHandle[instances.Count];
+			_events[1] = new WaitHandle[instances.Count];
 			controllerEvents = new AutoResetEvent[instances.Count];
 			for (int i = 0;i<instances.Count;i++) {
-				_events[i] = instances[i]._event;
+				_events[0][i] = instances[i]._event[0];
+				_events[1][i] = instances[i]._event[1];
 				controllerEvents[i] = instances[i].controllerEvent;
 			}
 		}
@@ -116,7 +124,7 @@ public abstract class MonoBehaviourPlus<T> : MonoBehaviour where T : MonoBehavio
 	public static void Wait(int timeOutInMS = 1000) {
 		PurgeNullInstances();
 		if (IS_DEBUG_ON) Debug.LogWarning("About to wait!");
-		WaitHandle.WaitAll(_events,timeOutInMS);
+		WaitHandle.WaitAll(_events[prevEventIndex],timeOutInMS);
 		if (IS_DEBUG_ON) Debug.LogWarning("Waiting finished for frame:" + MBP_Manager.frame);
 	}
 
@@ -126,31 +134,4 @@ public abstract class MonoBehaviourPlus<T> : MonoBehaviour where T : MonoBehavio
 		if (IS_DEBUG_ON) Debug.LogWarning("set to non-signal so work thread only perform once!");
 	}
 
-	public static void WaitThenUpdate() {
-		PurgeNullInstances();
-
-	}
-
-
 }
-
-//public class MonoThread {
-//
-//	Thread _thread;
-//	ThreadStart threadDelegate;
-//
-//	public MonoThread () {
-//		threadDelegate = ThreadContent;
-//		_thread = new Thread (threadDelegate);
-//	}
-//
-//	public void Start () {
-//		_thread.Start();
-//	}
-//
-//	void ThreadContent () {
-//		
-//	}
-//
-//
-//}

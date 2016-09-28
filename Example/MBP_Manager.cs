@@ -26,7 +26,7 @@ public class MBP_Manager : MonoBehaviour {
 
 	void LateUpdate() {
 		if (isMultithreading) {
-			TestMBP.Wait();
+			//TestMBP.Wait();
 			sw.Stop();
 			if (isDebugOn) Debug.LogWarning("Elapsed MS:" + sw.Elapsed.Milliseconds);
 			sw.Reset();
@@ -45,6 +45,10 @@ public class MBP_Manager : MonoBehaviour {
 		}
 		
 
+	}
+
+	void OnWillRenderObject () {
+		TestMBP.Wait();
 	}
 
 
