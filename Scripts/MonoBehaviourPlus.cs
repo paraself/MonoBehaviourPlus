@@ -38,9 +38,7 @@ public abstract class MonoBehaviourPlus<T> : MonoBehaviour where T : MonoBehavio
 
 	void Begin () {
 		if (Application.isPlaying) {
-			instances.Add(Instance);
 			updateDelegate = WaitCallback;
-			isInited = true;
 			bool s = ThreadPool.QueueUserWorkItem(updateDelegate);
 			if (!s) {
 				Debug.LogError("Cannot queue " 
@@ -52,7 +50,10 @@ public abstract class MonoBehaviourPlus<T> : MonoBehaviour where T : MonoBehavio
 				);
 				isPrallelUpdateEnabled = false;
 			} else {
+				instances.Add(Instance);
+				isInited = true;
 				isPrallelUpdateEnabled = true;
+				PurgeNullInstances(true);
 			}
 		}
 	}
@@ -82,23 +83,19 @@ public abstract class MonoBehaviourPlus<T> : MonoBehaviour where T : MonoBehavio
 	}
 
 	protected abstract void ParallelUpdate();
-	protected virtual void BeforeParallelUpdate(){}
-	protected virtual void AfterParallelUpdate(){}
 
 
 	void WaitCallback(object o) {
-		while (true) {
+		while (isPrallelUpdateEnabled) {
 			controllerEvent.WaitOne();
-			BeforeParallelUpdate();
 			ParallelUpdate ();
 			_event.Set();
-			AfterParallelUpdate();
 		}
 	}
 
 
 
-	static void PurgeNullInstances() {
+	static void PurgeNullInstances(bool isForceUpdate = false) {
 		bool token = false;
 		for (int i = instances.Count - 1;i>=0;i--) {
 			if (instances[i] == null) {
@@ -106,7 +103,7 @@ public abstract class MonoBehaviourPlus<T> : MonoBehaviour where T : MonoBehavio
 				token = true;
 			}
 		}
-		if (token || _events == null || controllerEvents == null) {
+		if (token || isForceUpdate || _events == null || controllerEvents == null) {
 			_events = new WaitHandle[instances.Count];
 			controllerEvents = new AutoResetEvent[instances.Count];
 			for (int i = 0;i<instances.Count;i++) {
@@ -129,5 +126,31 @@ public abstract class MonoBehaviourPlus<T> : MonoBehaviour where T : MonoBehavio
 		if (IS_DEBUG_ON) Debug.LogWarning("set to non-signal so work thread only perform once!");
 	}
 
+	public static void WaitThenUpdate() {
+		PurgeNullInstances();
+
+	}
+
 
 }
+
+//public class MonoThread {
+//
+//	Thread _thread;
+//	ThreadStart threadDelegate;
+//
+//	public MonoThread () {
+//		threadDelegate = ThreadContent;
+//		_thread = new Thread (threadDelegate);
+//	}
+//
+//	public void Start () {
+//		_thread.Start();
+//	}
+//
+//	void ThreadContent () {
+//		
+//	}
+//
+//
+//}
