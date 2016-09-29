@@ -27,10 +27,12 @@ public abstract class MonoBehaviourPlus<T> : MonoBehaviour where T : MonoBehavio
 	const bool IS_DEBUG_ON = false;
 	
 	static List<T> instances = new List<T> ();
-	AutoResetEvent[] _event = new AutoResetEvent[2] {new AutoResetEvent (true),new AutoResetEvent (false)}; 
+
 	static int eventIndex = 0;
 	static int prevEventIndex = 0;
+	int _eventIndex;
 	AutoResetEvent controllerEvent = new AutoResetEvent (false);
+	AutoResetEvent[] _event = new AutoResetEvent[2] {new AutoResetEvent (true),new AutoResetEvent (false)}; 
 	static WaitHandle[][] _events = new WaitHandle[2][] ;
 	static AutoResetEvent[] controllerEvents;
 	WaitCallback updateDelegate;
@@ -94,14 +96,11 @@ public abstract class MonoBehaviourPlus<T> : MonoBehaviour where T : MonoBehavio
 	void WaitCallback(object o) {
 		while (isPrallelUpdateEnabled) {
 			controllerEvent.WaitOne();
+			_eventIndex = eventIndex;
 			ParallelUpdate ();
-			prevEventIndex = eventIndex;
-			eventIndex = (eventIndex + 1) % 2;
-			_event[eventIndex].Set();
+			_event[_eventIndex].Set();
 		}
 	}
-
-
 
 	static void PurgeNullInstances(bool isForceUpdate = false) {
 		bool token = false;
@@ -132,6 +131,8 @@ public abstract class MonoBehaviourPlus<T> : MonoBehaviour where T : MonoBehavio
 	}
 
 	public static void UpdateAll() {
+		prevEventIndex = eventIndex;
+		eventIndex = (eventIndex + 1) % 2;
 		if (IS_DEBUG_ON) Debug.LogWarning("About to signal work thread to perform task!");
 		for (int i = 0;i<controllerEvents.Length;i++) controllerEvents[i].Set();
 		if (IS_DEBUG_ON) Debug.LogWarning("set to non-signal so work thread only perform once!");

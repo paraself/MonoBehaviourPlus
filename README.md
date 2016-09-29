@@ -15,7 +15,6 @@ public class MyMonoBehaviourType : MonoBehaviourPlus<MyMonoBehaviourType> {
 
 	}
 }
-
 ```
 Derive a class from ``MonoBehaviourPlus<T>``, and implement an abstract method called ``ParallelUpdate``. Put the heavy calculation load into this method without putting in any Unity api, because Unity's api cannot be used in user threads.  Then in a singleton manager script, you can call two apis to manipulate the parallel update behaviour.
 
@@ -59,11 +58,12 @@ WaitAll(WaitType.Current);
 ```
 Take Type 1 for instance, the actual usage of Type 1 might look like this:
 ```c#
-public class Manager : MonoBehaviour {
+//attach this script onto the main camera
+public class SingletonManager : MonoBehaviour {
   void Update() {
     MyMonoBehaviourType.WaitAll(WaitType.Previous);
   }
-  void OnWillRenderObject() {
+  void OnPreCull() {
     MyMonoBehaviourType.UpdateAll();
   }
 }
