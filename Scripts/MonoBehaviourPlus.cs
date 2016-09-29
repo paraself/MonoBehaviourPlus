@@ -64,7 +64,9 @@ public abstract class MonoBehaviourPlus<T> : MonoBehaviour where T : MonoBehavio
 		if (Application.isPlaying) {
 			isPrallelUpdateEnabled = false;
 			instances.Remove(Instance);
+			_event[0].Set();//in case any thread is waiting on this event
 			_event[0].Close();
+			_event[1].Set();
 			_event[1].Close();
 			isInited = false;
 		}
@@ -121,7 +123,7 @@ public abstract class MonoBehaviourPlus<T> : MonoBehaviour where T : MonoBehavio
 		}
 	}
 
-	public static void Wait(int timeOutInMS = 1000,WaitType waitType = WaitType.Previous) {
+	public static void WaitAll(int timeOutInMS = 1000,WaitType waitType = WaitType.Previous) {
 		PurgeNullInstances();
 		if (IS_DEBUG_ON) Debug.LogWarning("About to wait!");
 		int i = (waitType == WaitType.Previous ) ? prevEventIndex : eventIndex;

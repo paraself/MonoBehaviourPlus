@@ -37,6 +37,7 @@ public class MBP_Manager : MonoBehaviour {
 		else {
 			sw.Reset();
 			sw.Start();
+			frame ++;
 			foreach(var i in instances) {
 				i.NotMultithread();
 			}
@@ -48,7 +49,7 @@ public class MBP_Manager : MonoBehaviour {
 	}
 
 	void OnWillRenderObject () {
-		TestMBP.Wait();
+		TestMBP.WaitAll();
 	}
 
 
