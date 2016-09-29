@@ -123,7 +123,7 @@ public abstract class MonoBehaviourPlus<T> : MonoBehaviour where T : MonoBehavio
 		}
 	}
 
-	public static void WaitAll(int timeOutInMS = 1000,WaitType waitType = WaitType.Previous) {
+	public static void WaitAll(int timeOutInMS = 5000,WaitType waitType = WaitType.Previous) {
 		PurgeNullInstances();
 		if (IS_DEBUG_ON) Debug.LogWarning("About to wait!");
 		int i = (waitType == WaitType.Previous ) ? prevEventIndex : eventIndex;

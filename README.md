@@ -17,7 +17,7 @@ public class MyMonoBehaviourType : MonoBehaviourPlus<MyMonoBehaviourType> {
 }
 
 ```
-Derived a class from ``MonoBehaviourPlus<T>``, and implement an abstract method called ``ParallelUpdate``. Put the heavy calculation load into this method without putting in any Unity api, because Unity's api cannot be used in user threads.  Then in a singleton manager script, you can call two apis to manipulate the parallel update behaviour.
+Derive a class from ``MonoBehaviourPlus<T>``, and implement an abstract method called ``ParallelUpdate``. Put the heavy calculation load into this method without putting in any Unity api, because Unity's api cannot be used in user threads.  Then in a singleton manager script, you can call two apis to manipulate the parallel update behaviour.
 
 ##API
 
@@ -31,7 +31,7 @@ This will update the `ParallelUpdate` methods of all the instances multi-threade
 MyMonoBehaviourType.WaitAll(int timeOut = 1000,WaitType waitType = WaitType.Previous);
 ```
 This will make the manager script, which is running on the Unity main thread, to wait for all the instances' parallel updates.
-Note there are two parameters that define the waiting behaviour. `timeOut` let you sepcify the maximum waiting time. Enumeration `WaitType` let you specify the waiting type. You can wait for the completion of the previous `UpdateAll` or the current `UpdateAll`. When you call `WaitAll` , the **current** means the last called `UpdateAll` before this `WaitAll`; the **previous** means the one before the **current**. By supporting waiting for both current and preivous `UpdateAll`, it's possible to achieve double frame waiting and make the parallel update span over two frames, thus improve performance in the cost of one-frame lag.
+Note there are two parameters that define the waiting behaviour. `timeOut` let you sepcify the maximum waiting time. Enumeration `WaitType` let you specify the waiting type. You can wait for the completion of the previous `UpdateAll` or the current `UpdateAll`. When you call `WaitAll` , the **current** means the last called `UpdateAll` before this `WaitAll`; the **previous** means the one before the **current**. By supporting waiting for both current and preivous `UpdateAll`, it's possible to achieve double frame waiting and make the parallel update span over two frames, thus improve performance in the cost of one or two frames of rendering lag.
 
 ##Example
 Let's take a game loop update for example.
@@ -77,4 +77,4 @@ These four types of combination have different waiting behaviour.
 
 - Type 4 : frame n call its own UpdateAll then wait for its own calling of UpdateAll.
 
-Because when Unity renders gameObjects, it's also possible that ParallelUpdate is still working. So it's needed to make a local copy of the member variables onto which `ParallelUpdate` is manipulating.
+Because when Unity renders gameObjects, it's also possible that ParallelUpdate is still working. So it's important to make a local copy of the member variables onto which `ParallelUpdate` is manipulating.

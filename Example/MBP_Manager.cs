@@ -14,8 +14,12 @@ public class MBP_Manager : MonoBehaviour {
 
 	public static int frame = 0;
 
+	public float[] elapsedTime;
+	public int maxNumber = 10000;
+
 
 	void Start () {
+		elapsedTime = new float[maxNumber];
 		sw.Reset();
 		instances = Object.FindObjectsOfType<TestMBP>();
 		foreach ( var i in instances) {
@@ -26,9 +30,10 @@ public class MBP_Manager : MonoBehaviour {
 
 	void LateUpdate() {
 		if (isMultithreading) {
-			//TestMBP.Wait();
 			sw.Stop();
-			if (isDebugOn) Debug.LogWarning("Elapsed MS:" + sw.Elapsed.Milliseconds);
+			if (frame < maxNumber)
+				elapsedTime[frame] = sw.Elapsed.Milliseconds;
+			if (isDebugOn) Debug.LogWarning("Frame : " + frame + " Elapsed MS:" + sw.Elapsed.Milliseconds);
 			sw.Reset();
 			sw.Start();
 			frame ++;
@@ -48,8 +53,16 @@ public class MBP_Manager : MonoBehaviour {
 
 	}
 
-	void OnWillRenderObject () {
+	void OnPreCull() {
 		TestMBP.WaitAll();
+		float totalTime=0f;
+		for (int i = 0;i < maxNumber ; i++) {
+			totalTime += elapsedTime[i];
+		}
+		if (frame >= maxNumber) {
+			Debug.Log("Average Time:" + totalTime / maxNumber);
+			Debug.Break();
+		}
 	}
 
 
