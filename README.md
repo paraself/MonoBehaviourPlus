@@ -78,3 +78,19 @@ These four types of combination have different waiting behaviour.
 - Type 4 : frame n call its own UpdateAll then wait for its own calling of UpdateAll.
 
 Because when Unity renders gameObjects, it's also possible that ParallelUpdate is still working. So it's important to make a local copy of the member variables onto which `ParallelUpdate` is manipulating.
+
+## Benchmark
+
+The test results of different group are not strickly comparable. Because in multi-threaded test, I use Type 3 to wait for the previous frame, while in non-multithreaded test, the parallel updates are done within a frame.
+
+Update 10 instances for 300 frames on Macbook Air 11 inch 2013.
+
+| ParallelUpdate Load (ms) | Multithreaded Type 3 (ms) | Non-multithreaded (ms) | %    |
+| ------------------------ | ------------------------- | ---------------------- | ---- |
+| 5                        | 28                        | 56                     | 50   |
+| 10                       | 26                        | 110                    | 23   |
+| 20                       | 30                        | 210                    | 14.3 |
+| 30                       | 35.5                      | 310                    | 11.5 |
+| 50                       | 54                        | 510                    | 10.6 |
+
+

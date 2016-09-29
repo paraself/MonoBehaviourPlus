@@ -14,7 +14,7 @@ public class MBP_Manager : MonoBehaviour {
 
 	public static int frame = 0;
 
-	public float[] elapsedTime;
+	float[] elapsedTime;
 	public int maxNumber = 10000;
 
 
@@ -47,13 +47,16 @@ public class MBP_Manager : MonoBehaviour {
 				i.NotMultithread();
 			}
 			sw.Stop();
-			if (isDebugOn) Debug.LogWarning("Elapsed MS:" + sw.Elapsed.Milliseconds);
+			if (frame < maxNumber)
+				elapsedTime[frame] = sw.Elapsed.Milliseconds;
+			if (isDebugOn) Debug.LogWarning("Frame : " + frame + " Elapsed MS:" + sw.Elapsed.Milliseconds);
 		}
 		
 
 	}
 
 	void OnPreCull() {
+		if (isMultithreading == false) return;
 		TestMBP.WaitAll();
 		float totalTime=0f;
 		for (int i = 0;i < maxNumber ; i++) {
