@@ -33,8 +33,8 @@ public abstract class MonoBehaviourPlus<T> : MonoBehaviour where T : MonoBehavio
 	int _eventIndex;
 	AutoResetEvent controllerEvent = new AutoResetEvent (false);
 	AutoResetEvent[] _event = new AutoResetEvent[2] {new AutoResetEvent (true),new AutoResetEvent (true)}; 
-	static WaitHandle[][] _events = new WaitHandle[2][] ;
-	static AutoResetEvent[] controllerEvents;
+//	static WaitHandle[][] _events = new WaitHandle[2][] ;
+//	static AutoResetEvent[] controllerEvents;
 	WaitCallback updateDelegate;
 	bool isInited = false;
 	public bool isPrallelUpdateEnabled = true;
@@ -110,16 +110,16 @@ public abstract class MonoBehaviourPlus<T> : MonoBehaviour where T : MonoBehavio
 				token = true;
 			}
 		}
-		if (token || isForceUpdate || _events == null || controllerEvents == null) {
-			_events[0] = new WaitHandle[instances.Count];
-			_events[1] = new WaitHandle[instances.Count];
-			controllerEvents = new AutoResetEvent[instances.Count];
-			for (int i = 0;i<instances.Count;i++) {
-				_events[0][i] = instances[i]._event[0];
-				_events[1][i] = instances[i]._event[1];
-				controllerEvents[i] = instances[i].controllerEvent;
-			}
-		}
+//		if (token || isForceUpdate || _events == null || controllerEvents == null) {
+//			_events[0] = new WaitHandle[instances.Count];
+//			_events[1] = new WaitHandle[instances.Count];
+//			controllerEvents = new AutoResetEvent[instances.Count];
+//			for (int i = 0;i<instances.Count;i++) {
+//				_events[0][i] = instances[i]._event[0];
+//				_events[1][i] = instances[i]._event[1];
+//				controllerEvents[i] = instances[i].controllerEvent;
+//			}
+//		}
 	}
 
 	public static void WaitAll(int timeOutInMS = 5000,WaitType waitType = WaitType.Previous) {
@@ -137,7 +137,7 @@ public abstract class MonoBehaviourPlus<T> : MonoBehaviour where T : MonoBehavio
 		prevEventIndex = eventIndex;
 		eventIndex = (eventIndex + 1) % 2;
 		if (IS_DEBUG_ON) Debug.LogWarning("About to signal work thread to perform task!");
-		for (int i = 0;i<controllerEvents.Length;i++) controllerEvents[i].Set();
+		for (int i = 0;i<instances.Count;i++) instances[i].controllerEvent.Set();
 		if (IS_DEBUG_ON) Debug.LogWarning("set to non-signal so work thread only perform once!");
 	}
 
