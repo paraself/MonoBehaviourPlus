@@ -29,10 +29,10 @@ public abstract class MonoBehaviourPlus<T> : MonoBehaviour where T : MonoBehavio
 	static List<T> instances = new List<T> ();
 
 	static int eventIndex = 0;
-	static int prevEventIndex = 0;
+	static int prevEventIndex = 1;
 	int _eventIndex;
 	AutoResetEvent controllerEvent = new AutoResetEvent (false);
-	AutoResetEvent[] _event = new AutoResetEvent[2] {new AutoResetEvent (true),new AutoResetEvent (false)}; 
+	AutoResetEvent[] _event = new AutoResetEvent[2] {new AutoResetEvent (true),new AutoResetEvent (true)}; 
 	static WaitHandle[][] _events = new WaitHandle[2][] ;
 	static AutoResetEvent[] controllerEvents;
 	WaitCallback updateDelegate;
@@ -126,7 +126,10 @@ public abstract class MonoBehaviourPlus<T> : MonoBehaviour where T : MonoBehavio
 		PurgeNullInstances();
 		if (IS_DEBUG_ON) Debug.LogWarning("About to wait!");
 		int i = (waitType == WaitType.Previous ) ? prevEventIndex : eventIndex;
-		WaitHandle.WaitAll(_events[i],timeOutInMS);
+		//WaitHandle.WaitAll(_events[i],timeOutInMS);
+		for (int j =0;j<instances.Count;j++) {
+			instances[j]._event[i].WaitOne(timeOutInMS);
+		}
 		if (IS_DEBUG_ON) Debug.LogWarning("Waiting finished for frame:" + MBP_Manager.frame);
 	}
 

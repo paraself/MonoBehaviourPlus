@@ -57,15 +57,17 @@ public class MBP_Manager : MonoBehaviour {
 
 	void OnPreCull() {
 		if (isMultithreading == false) return;
-		TestMBP.WaitAll();
-		float totalTime=0f;
-		for (int i = 0;i < maxNumber ; i++) {
-			totalTime += elapsedTime[i];
-		}
 		if (frame >= maxNumber) {
+			float totalTime=0f;
+			for (int i = 0;i < maxNumber ; i++) {
+				totalTime += elapsedTime[i];
+			}
 			Debug.Log("Average Time:" + totalTime / maxNumber);
 			Debug.Break();
+			return;
 		}
+		TestMBP.WaitAll();
+
 	}
 
 
