@@ -27,6 +27,11 @@ public abstract class MonoBehaviourPlus<T> : MonoBehaviour where T : MonoBehavio
 	const bool IS_DEBUG_ON = false;
 	
 	static List<T> instances = new List<T> ();
+	public static List<T> Instances {
+		get {
+			return instances;
+		}
+	}
 
 	static int eventIndex = 0;
 	static int prevEventIndex = 1;
@@ -57,7 +62,8 @@ public abstract class MonoBehaviourPlus<T> : MonoBehaviour where T : MonoBehavio
 				instances.Add(Instance);
 				isInited = true;
 				isPrallelUpdateEnabled = true;
-				PurgeNullInstances(true);
+				//PurgeNullInstances();
+
 			}
 		}
 	}
@@ -92,6 +98,16 @@ public abstract class MonoBehaviourPlus<T> : MonoBehaviour where T : MonoBehavio
 
 	protected abstract void ParallelUpdate();
 
+	/// <summary>
+	/// This method is called before parallel update, you can put in Unity's api inside this method
+	/// </summary>
+	protected virtual void BeforeParallelUpdate(int frameIndex) {}
+
+	/// <summary>
+	/// This method is called after WaitAll is complelete. You can put in any Unity's api inside this method
+	/// </summary>
+	protected virtual void AfterParallelUpdate(int frameIndex) {}
+
 
 	void WaitCallback(object o) {
 		while (isPrallelUpdateEnabled) {
@@ -102,12 +118,12 @@ public abstract class MonoBehaviourPlus<T> : MonoBehaviour where T : MonoBehavio
 		}
 	}
 
-	static void PurgeNullInstances(bool isForceUpdate = false) {
-		bool token = false;
+	static void PurgeNullInstances() {
+//		bool token = false;
 		for (int i = instances.Count - 1;i>=0;i--) {
 			if (instances[i] == null) {
 				instances.RemoveAt(i);
-				token = true;
+//				token = true;
 			}
 		}
 //		if (token || isForceUpdate || _events == null || controllerEvents == null) {
@@ -130,14 +146,21 @@ public abstract class MonoBehaviourPlus<T> : MonoBehaviour where T : MonoBehavio
 		for (int j =0;j<instances.Count;j++) {
 			instances[j]._event[i].WaitOne(timeOutInMS);
 		}
+		for (int j =0;j<instances.Count;j++) {
+			instances[j].AfterParallelUpdate(i);
+		}
 		if (IS_DEBUG_ON) Debug.LogWarning("Waiting finished for frame:" + MBP_Manager.frame);
 	}
 
 	public static void UpdateAll() {
 		prevEventIndex = eventIndex;
 		eventIndex = (eventIndex + 1) % 2;
-		if (IS_DEBUG_ON) Debug.LogWarning("About to signal work thread to perform task!");
-		for (int i = 0;i<instances.Count;i++) instances[i].controllerEvent.Set();
+		if (IS_DEBUG_ON) Debug.LogWarning(" about to signal work thread to perform task!");
+		//Debug.Log(instances.Count);
+		for (int i = 0;i<instances.Count;i++) {
+			instances[i].BeforeParallelUpdate(eventIndex);
+			instances[i].controllerEvent.Set();
+		}
 		if (IS_DEBUG_ON) Debug.LogWarning("set to non-signal so work thread only perform once!");
 	}
 
