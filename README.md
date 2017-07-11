@@ -1,6 +1,6 @@
 # MonoBehaviourPlus
 Multi-threaded monobehaviour for Unity3D  
-##Usage
+## Usage
 
 ```c#
 using UnityEngine;
@@ -18,7 +18,7 @@ public class MyMonoBehaviourType : MonoBehaviourPlus<MyMonoBehaviourType> {
 ```
 Derive a class from ``MonoBehaviourPlus<T>``, and implement an abstract method called ``ParallelUpdate``. Put the heavy calculation load into this method without putting in any Unity api, because Unity's api cannot be used in user threads.  Then in a singleton manager script, you can call two apis to manipulate the parallel update behaviour.
 
-##API
+## API
 
 ```c#
 MyMonoBehaviourType.UpdateAll();
@@ -32,7 +32,7 @@ MyMonoBehaviourType.WaitAll(int timeOut = 1000,WaitType waitType = WaitType.Prev
 This will make the manager script, which is running on the Unity main thread, to wait for all the instances' parallel updates.
 Note there are two parameters that define the waiting behaviour. `timeOut` let you sepcify the maximum waiting time. Enumeration `WaitType` let you specify the waiting type. You can wait for the completion of the previous `UpdateAll` or the current `UpdateAll`. When you call `WaitAll` , the **current** means the last called `UpdateAll` before this `WaitAll`; the **previous** means the one before the **current**. By supporting waiting for both current and preivous `UpdateAll`, it's possible to achieve double frame waiting and make the parallel update span over two frames, thus improve performance in the cost of one or two frames of rendering lag.
 
-##Example
+## Example
 Let's take a game loop update for example.
 First, within a game loop, there are four ways to combine `WaitAll` and `UpdateAll`. These are:
 
