@@ -1,3 +1,5 @@
+# DEPRECATED!
+As Unity3D introduced Jos system, this plugin is no longer needed!
 # MonoBehaviourPlus
 Multi-threaded monobehaviour for Unity3D  
 ## Usage
